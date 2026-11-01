@@ -73,11 +73,36 @@ function h($value) {
     return htmlspecialchars($value, ENT_QUOTES, 'UTF-8');
 }
 
+// "Captain America" -> "captain-america"
+function slug($text) {
+    return trim(preg_replace('/[^a-z0-9]+/', '-', strtolower($text)), '-');
+}
+
+// Finds images/<slug>.jpg|.jpeg|.png|.webp, or returns null
+function heroImage($alias) {
+    foreach (['jpg', 'jpeg', 'png', 'webp'] as $ext) {
+        $path = 'images/' . slug($alias) . '.' . $ext;
+        if (file_exists(__DIR__ . '/' . $path)) {
+            return $path;
+        }
+    }
+    return null;
+}
+
+// "Captain America" -> "CA"
+function initials($alias) {
+    $letters = '';
+    foreach (preg_split('/\s+/', $alias) as $word) {
+        $letters .= strtoupper($word[0]);
+    }
+    return substr($letters, 0, 2);
+}
+
 // Blank search: return the full list
 if ($query === '') {
-    echo "<ul>\n";
+    echo "<ul class=\"hero-list\">\n";
     foreach ($superheroes as $superhero) {
-        echo '  <li>' . h($superhero['alias']) . "</li>\n";
+        echo '  <li data-alias="' . h($superhero['alias']) . '">' . h($superhero['alias']) . "</li>\n";
     }
     echo "</ul>\n";
     exit;
@@ -95,6 +120,17 @@ if (empty($matches)) {
 }
 
 $hero = reset($matches);
+$image = heroImage($hero['alias']);
+
+echo '<article class="hero-card">';
+if ($image) {
+    echo '<img class="hero-photo" src="' . h($image) . '" alt="' . h($hero['alias']) . '">';
+} else {
+    echo '<div class="hero-photo hero-initials">' . h(initials($hero['alias'])) . '</div>';
+}
+echo '<div class="hero-info">';
 echo '<h3>' . h($hero['alias']) . '</h3>';
 echo '<h4>A.K.A ' . h($hero['name']) . '</h4>';
 echo '<p>' . h($hero['biography']) . '</p>';
+echo '</div>';
+echo '</article>';

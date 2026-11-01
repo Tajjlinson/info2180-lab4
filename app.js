@@ -3,12 +3,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const input = document.getElementById('search');
   const result = document.getElementById('result');
 
-  form.addEventListener('submit', (event) => {
-    event.preventDefault();
-
+  function search(query) {
     // Basic client-side sanitizing; the PHP script also sanitizes and escapes
-    const query = input.value.trim().replace(/[<>]/g, '');
-    const url = 'superheroes.php?query=' + encodeURIComponent(query);
+    const clean = query.trim().replace(/[<>]/g, '');
+    const url = 'superheroes.php?query=' + encodeURIComponent(clean);
 
     fetch(url)
       .then((response) => {
@@ -24,5 +22,19 @@ document.addEventListener('DOMContentLoaded', () => {
         result.innerHTML = '<p class="not-found">Something went wrong. Try again.</p>';
         console.error(error);
       });
+  }
+
+  form.addEventListener('submit', (event) => {
+    event.preventDefault();
+    search(input.value);
+  });
+
+  // Clicking a hero in the full list searches for that hero
+  result.addEventListener('click', (event) => {
+    const item = event.target.closest('li[data-alias]');
+    if (item) {
+      input.value = item.dataset.alias;
+      search(item.dataset.alias);
+    }
   });
 });
